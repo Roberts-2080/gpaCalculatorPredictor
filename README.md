@@ -1,5 +1,5 @@
 ## Grade Calculator
-The grade calculator provides students with a tool to calculate their overall grade. Students are enrolled in several classes, so it can get difficult for them to calculate their grades without any tools. This is where the grade calculator excels! The tool is user-friendly and should be student's go-to when final season comes around.
+The grade calculator/predictor provides students with a tool to calculate their overall GPA/predict how many grades they need to get in a specified assignment/exam. Students are enrolled in several classes, so it can get difficult for them to calculate their GPA without any tools. This is where the grade calculator excels! The tool is user-friendly and all students can see their ranks among the whole dataset & share their ranks in social media!
 
 
 ### To start development:
