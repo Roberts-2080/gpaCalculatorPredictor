@@ -549,7 +549,7 @@ def score_predict():
         response = {
             "code": 500,
             "data": None,
-            "msg": "预期线不能小于60"
+            "msg": "预期线不能小于50"
         }
         return jsonify(response)
 
