@@ -31,8 +31,7 @@ def rank_list():
 @app.route('/api/rank/v1/add', methods=['POST'])
 def add_rank():
     """
-    添加排名
-    :return:
+    添加排名 - Calculate GPA based on UQ's 7-point grading system and add ranking.
     """
     response = {
         "code": 0,
@@ -49,8 +48,28 @@ def add_rank():
             "msg": "用户名不能为空"
         }
         return jsonify(response)
-    num = 0
-    all_score = 0
+
+    total_units = 0  # Total units attempted
+    total_weighted_grade_points = 0  # Total weighted grade points
+
+    # UQ Grading Scale Mapping
+    def get_grade_point(score):
+        if 85 <= score <= 100:
+            return 7
+        elif 75 <= score <= 84:
+            return 6
+        elif 65 <= score <= 74:
+            return 5
+        elif 50 <= score <= 64:
+            return 4
+        elif 45 <= score <= 49:
+            return 3
+        elif 20 <= score <= 44:
+            return 2
+        elif 0 <= score <= 19:
+            return 1
+        else:
+            return None  # Invalid score
 
     for item in semester_children:
         if not item.get("semester_title"):
@@ -64,30 +83,52 @@ def add_rank():
         for i in item.get("course_children"):
             course_title = i.get("course_title")
             score = i.get("score")
-            if not course_title or not score:
+            units = i.get("units", 2)  # Default to 2 units if not provided
+
+            if not course_title or score is None:
                 response = {
                     "code": 500,
                     "data": None,
                     "msg": "课程名或分数不能为空"
                 }
                 return jsonify(response)
+
             score = int(score)
+            units = float(units)
 
-            if score > 100:
+            if score > 100 or score < 0:
                 response["code"] = 500
-                response["msg"] = "分数不能大于100"
+                response["msg"] = "分数应在0到100之间"
                 return jsonify(response)
-            all_score += score
-            num += 1
 
-    avg_score = all_score / num
+            grade_point = get_grade_point(score)
+            if grade_point is None:
+                response["code"] = 500
+                response["msg"] = "无效的分数"
+                return jsonify(response)
+
+            # Calculate weighted grade points
+            weighted_grade_points = grade_point * units
+            total_weighted_grade_points += weighted_grade_points
+            total_units += units
+
+    if total_units == 0:
+        response["code"] = 500
+        response["msg"] = "总学分为0，无法计算GPA"
+        return jsonify(response)
+
+    gpa = total_weighted_grade_points / total_units
+
     try:
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
-        cursor.execute(f"insert into score(username, avg_score) values('{username}', {round(avg_score, 2)})")
+        cursor.execute(
+            f"INSERT INTO score(username, avg_score) VALUES (%s, %s)",
+            (username, round(gpa, 2))
+        )
         connection.commit()
 
-        cursor.execute("select * from score order by avg_score desc")
+        cursor.execute("SELECT * FROM score ORDER BY avg_score DESC")
         res = cursor.fetchall()
         all_rank = 0
         for item in res:
