@@ -545,7 +545,7 @@ def score_predict():
             "msg": "预期线或最终测试占比不能大于100"
         }
         return jsonify(response)
-    if prediction_line < 60:
+    if prediction_line < 50:
         response = {
             "code": 500,
             "data": None,
